@@ -1,0 +1,1 @@
+python prepro.py --input_json coco/neural_talk_prepare.json --num_val 100 --num_test 100 --images_root /Users/chengpoleness/Documents/code/machine-learning/visual-to-Language/ai_challenger_caption_train_20170902/code/data  --output_json coco/caption_train_images_output.json --output_h5 coco/caption_train_images_output.h5
