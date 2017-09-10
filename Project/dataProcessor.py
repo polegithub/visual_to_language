@@ -1,5 +1,6 @@
 # -*- coding:utf-8 -*-
 import json
+import argparse
 
 
 def store(data):
@@ -14,15 +15,29 @@ def load():
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    # input json
+    parser.add_argument('--count', required=False,
+                        help='input json process count')
+    args = parser.parse_args()
+    params = vars(args)  # convert to ordinary dict
+    count = int(params['count'])
+    if count < 0:
+        count = 100
+
     source_data = load()
     print type(source_data)
     print len(source_data)
     format_data = []
+
     for item in source_data:
         data = {}
         data["file_path"] = item["image_id"]
         data["captions"] = item["caption"]
-        if len(format_data) < 1000:
-            format_data.append(data)
+        format_data.append(data)
+        if len(format_data) > count:
+            break
 
     store(format_data)
+    print "data process successfully"
+    print 'processed: ' + str(count)

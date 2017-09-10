@@ -37,6 +37,9 @@ import sys
 reload(sys)
 sys.setdefaultencoding('utf-8')
 
+# for chinese
+import jieba
+
 
 def prepro_captions(imgs):
 
@@ -48,27 +51,42 @@ def prepro_captions(imgs):
             txt = str(s).lower().translate(
                 None, string.punctuation).strip().split()
             img['processed_tokens'].append(txt)
-            if i < 10 and j == 0:
-                print txt
+            # if i < 10 and j == 0:
+            #     print txt
+            # if i == 0:
+            #     print 'processed_tokens:'
+            #     print j
+            #     print img['processed_tokens']
 
 
 def build_vocab(imgs, params):
     count_thr = params['word_count_threshold']
-
     # count up the number of words
     counts = {}
+    index = 0
     for img in imgs:
+        # print imgs
         for txt in img['processed_tokens']:
-            for w in txt:
-                counts[w] = counts.get(w, 0) + 1
+            if index == 0:
+                print 'print:txt: '
+                print txt
+            for sentence in txt:
+                word_list = jieba.cut(sentence, cut_all=True)
+                for word in word_list:
+                    if index == 0:
+                        print 'print:w: '
+                        print word
+                    counts[word] = counts.get(word, 0) + 1
+            index += 1
+
     cw = sorted([(count, w) for w, count in counts.iteritems()], reverse=True)
-    print 'top words and their counts:'
-    print '\n'.join(map(str, cw[:20]))
+    # print 'top words and their counts:'
+    # print '\n'.join(map(str, cw[:20]))
 
     # print some stats
     total_words = sum(counts.itervalues())
     print 'total words:', total_words
-    bad_words = [w for w, n in counts.iteritems() if n < count_thr]
+    bad_words = [w for w, n in counts.iteritems() if n <= count_thr]
     vocab = [w for w, n in counts.iteritems() if n > count_thr]
     bad_count = sum(counts[w] for w in bad_words)
     print 'number of bad words: %d/%d = %.2f%%' % (len(bad_words), len(counts), len(bad_words) * 100.0 / len(counts))

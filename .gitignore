@@ -1,3 +1,11 @@
+# Project config
+Project/data/
+ThirdLibarary/neuraltalk2/images/
+ThirdLibarary/neuraltalk2/vis/imgs/
+ThirdLibarary/neuraltalk2/model/
+
+.vscode/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
