@@ -1,7 +1,7 @@
 import tensorflow as tf
 from datasets import imnist
 
-mnist = imnist.read_data_sets('./MNIST_data/', one_hot=True)
+mnist = imnist_source.read_data_sets('./MNIST_data/', one_hot=True)
 
 
 def compute_accuracy(v_xs, v_ys):

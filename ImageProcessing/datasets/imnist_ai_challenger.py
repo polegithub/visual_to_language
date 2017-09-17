@@ -81,42 +81,36 @@ def isPath(f):
 def process_ai_challenger_images(label_file, one_hot=False, num_classes=79):
     jsonData = load_ai_challenger_json()
     image_dir = './ai_challenger_data/scene_train_images_brief'
-    index = 0
-    trainCount = 0
-    testCount = 0
+    label_list = []
+    fp_list = []
     for item in jsonData:
         fp = image_dir + '/' + item['image_id']
         if os.path.exists(fp):
-            isTrain = index <= 10 and label_file == 'TRAIN'
-            isTest = index > 10 and label_file == 'TEST'
-            if isTrain:
-                trainCount += 1
-            if isTest :
-                testCount += 1
-            index = index + 1
+            fp_list.append(fp)
+            label_list.append(item["label_id"])
 
-    print("done: %d" % index)
-    images = numpy.empty((trainCount, 28 * 28 * 3))
-    labels = numpy.empty(testCount)
+    print("done: %d" % len(fp_list))
+    images = numpy.empty((len(fp_list), 28 * 28 * 3))
+    labels = numpy.empty(len(label_list))
 
-    index = 0
-    for item in jsonData:
-        fp = image_dir + '/' + item['image_id']
-        if os.path.exists(fp):
-            print(fp)
-            isTrain = index <= 10 and label_file == 'TRAIN'
-            isTest = index > 10 and label_file == 'TEST'
-            if isTrain or isTest:
-                image = Image.open(fp)
-                resized_image = image.resize((28, 28), Image.ANTIALIAS)
-                img_ndarray = numpy.asarray(resized_image, dtype='float32')
-                images[index] = numpy.ndarray.flatten(img_ndarray)
-                labels[index] = numpy.int(item['label_id'])
+    for fp in fp_list:
+        index = fp_list.index(fp)
+        image = Image.open(fp)
+        resized_image = image.resize((28, 28), Image.ANTIALIAS)
+        img_ndarray = numpy.asarray(resized_image, dtype='float32')
+        images[index] = numpy.ndarray.flatten(img_ndarray)
+        labels[index] = numpy.int(label_list[index])
 
-            index = index + 1
+    train_size = 10
+    if label_file == 'TRAIN':
+        images = images[:train_size]
+        labels = labels[:train_size]
+    else:
+        images = images[train_size:]
+        labels = labels[train_size:]
 
-    print("done: %d" % index)
-    num_images = index
+    num_images = len(images)
+    print("done: %d" % num_images)
     rows = 28
     cols = 28
     if one_hot:
