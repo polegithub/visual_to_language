@@ -84,7 +84,9 @@ def process_ai_challenger_images(label_file, one_hot=False, num_classes=10):
     index = 0
     for item in jsonData:
         fp = image_dir + '/' + item['image_id']
-        if os.path.exists(fp):
+        isTrain = label_file == 'TRAIN'
+        isTest = index % 2 == 0 and label_file == 'TEST'
+        if os.path.exists(fp) and (isTrain or isTest):
             index = index + 1
     print("done: %d" % index)
     images = numpy.empty((index, 28 * 28 * 3))
@@ -93,7 +95,9 @@ def process_ai_challenger_images(label_file, one_hot=False, num_classes=10):
     index = 0
     for item in jsonData:
         fp = image_dir + '/' + item['image_id']
-        if os.path.exists(fp):
+        isTrain = label_file == 'TRAIN'
+        isTest = index % 3 == 0 and label_file == 'TEST'
+        if os.path.exists(fp) and (isTrain or isTest):
             print(fp)
             image = Image.open(fp)
             resized_image = image.resize((28, 28), Image.ANTIALIAS)
@@ -105,8 +109,9 @@ def process_ai_challenger_images(label_file, one_hot=False, num_classes=10):
     num_images = index
     rows = 28
     cols = 28
-    if one_hot:
-        return images.reshape(num_images, rows, cols, 3), dense_to_one_hot(numpy.array(labels, dtype=numpy.uint8), num_classes)
+    # if one_hot:
+    # TODO: polen
+    # return images.reshape(num_images, rows, cols, 3), dense_to_one_hot(numpy.array(labels, dtype=numpy.uint8), num_classes)
     return images.reshape(num_images, rows, cols, 3), numpy.array(labels, dtype=numpy.uint8)
 
 
@@ -136,10 +141,13 @@ def read_data_sets(data_dir,
     # test_images, test_labels = process_images(TEST, one_hot=one_hot)
 
     train_images, train_labels = process_ai_challenger_images(
-        TRAIN, one_hot=one_hot)
-    train_images, train_labels = process_ai_challenger_images(
-        TEST, one_hot=one_hot)
+        'TRAIN', one_hot=one_hot)
+    test_images, test_labels = process_ai_challenger_images(
+        'TEST', one_hot=one_hot)
 
+    # polen
+    validation_size = 3
+    # polen
     if not 0 <= validation_size <= len(train_images):
         raise ValueError(
             'Validation size should be between 0 and {}. Received: {}.'
@@ -196,9 +204,9 @@ class DataSet(object):
             # Convert shape from [num examples, rows, columns, depth]
             # to [num examples, rows*columns] (assuming depth == 1)
             if reshape:
-                assert images.shape[3] == 1
+                assert images.shape[3] == 3
                 images = images.reshape(images.shape[0],
-                                        images.shape[1] * images.shape[2])
+                                        images.shape[1] * images.shape[2], 3)
             if dtype == dtypes.float32:
                 # Convert from [0, 255] -> [0.0, 1.0].
                 images = images.astype(numpy.float32)
