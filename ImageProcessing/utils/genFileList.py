@@ -25,8 +25,8 @@ def files_labels2txt():
     tmp_train = []
     tmp_test = []
     # gen train file list
-    for i in range(2):
-        # for i in range(10):
+    # for i in range(2):
+    for i in range(10):
         train_dir = train_path + str(i) + '/'
         tmp_train = tmp_train + gen_label_file(train_dir)
         test_dir = test_path + str(i) + '/'
@@ -35,10 +35,10 @@ def files_labels2txt():
     file(test_path + 'test.txt', "w").writelines(tmp_test)
 
 
-def files_challengerAI2txt():
+# def files_challengerAI2txt():
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     #get_label(img_root + "mnist_test/0/")
     #gen_label_file(img_root + "mnist_test/0/")
     files_labels2txt()

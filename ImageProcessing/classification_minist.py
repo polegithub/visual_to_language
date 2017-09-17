@@ -37,15 +37,21 @@ def max_pool_2x2(x):
 # define placeholder for inputs to network
 xs = tf.placeholder(tf.float32, [None, 784]) / 255.   # 28x28
 ys = tf.placeholder(tf.float32, [None, 10])
+
+# xs = tf.placeholder(tf.float32, [None, 784, 3])   # 28x28
+# ys = tf.placeholder(tf.float32, [None, 80])
 keep_prob = tf.placeholder(tf.float32)
 x_image = tf.reshape(xs, [-1, 28, 28, 1])
+
+# x_image = tf.reshape(xs, [-1, 28, 28, 3])
 # print(x_image.shape)  # [n_samples, 28,28,1]
 
 ## conv1 layer ##
+# W_conv1 = weight_variable([5, 5, 1, 32])  # patch 5x5, in size 1, out size 32
 W_conv1 = weight_variable([5, 5, 1, 32])  # patch 5x5, in size 1, out size 32
 b_conv1 = bias_variable([32])
-h_conv1 = tf.nn.relu(conv2d(x_image, W_conv1) +
-                     b_conv1)  # output size 28x28x32
+# output size 28x28x32
+h_conv1 = tf.nn.relu(conv2d(x_image, W_conv1) + b_conv1)
 # output size 14x14x32
 h_pool1 = max_pool_2x2(h_conv1)
 
@@ -66,6 +72,8 @@ h_fc1 = tf.nn.relu(tf.matmul(h_pool2_flat, W_fc1) + b_fc1)
 h_fc1_drop = tf.nn.dropout(h_fc1, keep_prob)
 
 ## fc2 layer ##
+# W_fc2 = weight_variable([1024, 80])
+# b_fc2 = bias_variable([80])
 W_fc2 = weight_variable([1024, 10])
 b_fc2 = bias_variable([10])
 prediction = tf.nn.softmax(tf.matmul(h_fc1_drop, W_fc2) + b_fc2)
@@ -81,13 +89,15 @@ sess = tf.Session()
 init = tf.global_variables_initializer()
 sess.run(init)
 
-for i in range(100):
+for i in range(13):
     # for i in range(1000):
+    # batch_xs, batch_ys = mnist.train.next_batch(100)
     batch_xs, batch_ys = mnist.train.next_batch(100)
+    print('batch_xs, batch_ys:')
+    print(batch_xs.shape, batch_ys.shape)
     sess.run(train_step, feed_dict={
              xs: batch_xs, ys: batch_ys, keep_prob: 0.5})
-    # print(batch_xs.shape, batch_ys.shape)
-    if i % 50 == 0:
+    if i % 2 == 0:
         print(mnist.test.images.shape, mnist.test.labels.shape)
         print(compute_accuracy(
             mnist.test.images, mnist.test.labels))

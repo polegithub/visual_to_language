@@ -85,7 +85,7 @@ def process_ai_challenger_images(label_file, one_hot=False, num_classes=10):
     for item in jsonData:
         fp = image_dir + '/' + item['image_id']
         isTrain = label_file == 'TRAIN'
-        isTest = index % 2 == 0 and label_file == 'TEST'
+        isTest = label_file == 'TEST'
         if os.path.exists(fp) and (isTrain or isTest):
             index = index + 1
     print("done: %d" % index)
@@ -96,7 +96,7 @@ def process_ai_challenger_images(label_file, one_hot=False, num_classes=10):
     for item in jsonData:
         fp = image_dir + '/' + item['image_id']
         isTrain = label_file == 'TRAIN'
-        isTest = index % 3 == 0 and label_file == 'TEST'
+        isTest = label_file == 'TEST'
         if os.path.exists(fp) and (isTrain or isTest):
             print(fp)
             image = Image.open(fp)
@@ -137,16 +137,16 @@ def read_data_sets(data_dir,
     TEST = data_dir + 'mnist_test/test.txt'
     # from tensorflow.examples.tutorials.mnist import input_data
     # train and test from images and txt labels
-    # train_images, train_labels = process_images(TRAIN, one_hot=one_hot)
-    # test_images, test_labels = process_images(TEST, one_hot=one_hot)
+    train_images, train_labels = process_images(TRAIN, one_hot=one_hot)
+    test_images, test_labels = process_images(TEST, one_hot=one_hot)
 
-    train_images, train_labels = process_ai_challenger_images(
-        'TRAIN', one_hot=one_hot)
-    test_images, test_labels = process_ai_challenger_images(
-        'TEST', one_hot=one_hot)
+    # train_images, train_labels = process_ai_challenger_images(
+    # 'TRAIN', one_hot=one_hot)
+    # test_images, test_labels = process_ai_challenger_images(
+    # 'TEST', one_hot=one_hot)
 
     # polen
-    validation_size = 3
+    # validation_size = 5
     # polen
     if not 0 <= validation_size <= len(train_images):
         raise ValueError(
@@ -204,13 +204,21 @@ class DataSet(object):
             # Convert shape from [num examples, rows, columns, depth]
             # to [num examples, rows*columns] (assuming depth == 1)
             if reshape:
-                assert images.shape[3] == 3
+                # assert images.shape[3] == 3
+                # images = images.reshape(images.shape[0],
+                #                         images.shape[1] * images.shape[2], 3)
+
+                assert images.shape[3] == 1
                 images = images.reshape(images.shape[0],
-                                        images.shape[1] * images.shape[2], 3)
+                                        images.shape[1] * images.shape[2])
             if dtype == dtypes.float32:
                 # Convert from [0, 255] -> [0.0, 1.0].
                 images = images.astype(numpy.float32)
-                images = numpy.multiply(images, 1.0 / 255.0)
+                # images = numpy.multiply(images, 1.0 / 255.0)
+        # polen
+        print('lanel:')
+        print(labels)
+        # polen
         self._images = images
         self._labels = labels
         self._epochs_completed = 0
