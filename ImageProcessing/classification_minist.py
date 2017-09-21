@@ -1,5 +1,5 @@
 import tensorflow as tf
-from datasets import imnist
+from datasets import imnist_source
 
 mnist = imnist_source.read_data_sets('./MNIST_data/', one_hot=True)
 
@@ -89,15 +89,12 @@ sess = tf.Session()
 init = tf.global_variables_initializer()
 sess.run(init)
 
-for i in range(13):
-    # for i in range(1000):
+for i in range(1000):
     # batch_xs, batch_ys = mnist.train.next_batch(100)
     batch_xs, batch_ys = mnist.train.next_batch(100)
-    print('batch_xs, batch_ys:')
-    print(batch_xs.shape, batch_ys.shape)
     sess.run(train_step, feed_dict={
              xs: batch_xs, ys: batch_ys, keep_prob: 0.5})
-    if i % 2 == 0:
+    if i % 50 == 0:
         print(mnist.test.images.shape, mnist.test.labels.shape)
         print(compute_accuracy(
             mnist.test.images, mnist.test.labels))

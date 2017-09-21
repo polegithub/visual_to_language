@@ -21,6 +21,7 @@ import json
 import tensorflow as tf
 from tensorflow.python.platform import gfile
 import os
+import csv
 
 
 def _read32(bytestream):
@@ -28,93 +29,60 @@ def _read32(bytestream):
     return numpy.frombuffer(bytestream.read(4), dtype=dt)[0]
 
 
-def process_images(label_file, one_hot=False, num_classes=79):
-    if file.getFileName(label_file) == 'train.txt':
-        images = numpy.empty((60000, 784))
-        labels = numpy.empty(60000)
-    if file.getFileName(label_file) == 'test.txt':
-        images = numpy.empty((10000, 784))
-        labels = numpy.empty(10000)
-    lines = readLines(label_file)
-    label_record = map(lines)
-    file_name_length = len(file.getFileName(label_file))
-    print("process_images:label_file:")
-    print(label_file)
-    image_dir = label_file[:-1 * file_name_length]
-    print("process_images:image_dir:")
-    print(image_dir)
-
-    print(len(label_record))
-    index = 0
-    for name in label_record:
-        # print label_record[name]
-        image = Image.open(image_dir + str(label_record[name]) + '/' + name)
-        if index % 100 == 0:
-            print("processing %d: " % index + image_dir +
-                  str(label_record[name]) + '/' + name)
-
-        img_ndarray = numpy.asarray(image, dtype='float32')
-        images[index] = numpy.ndarray.flatten(img_ndarray)
-        labels[index] = numpy.int(label_record[name])
-
-        index = index + 1
-    print("done: %d" % index)
-    num_images = index
-    rows = 28
-    cols = 28
-    if one_hot:
-        return images.reshape(num_images, rows, cols, 1), dense_to_one_hot(numpy.array(labels, dtype=numpy.uint8), num_classes)
-    return images.reshape(num_images, rows, cols, 1), numpy.array(labels, dtype=numpy.uint8)
-
-
 def load_ai_challenger_json():
-
     with open('./ai_challenger_data/scene_train_annotations_20170904.json', 'r') as f:
         data = json.load(f)
         return data
 
 
-def isPath(f):
-    return isinstance(f, basestring)
+def load_ai_scene_classes():
+    with open('./ai_challenger_data/scene_classes.csv', 'rb') as csvfile:
+        reader = csv.reader(csvfile)
+        scene_classes_map = {}
+        index = 0
+        for scene_class in reader:
+            scene_classes_map[index] = scene_class[1]
+            index += 1
+        return scene_classes_map
 
 
 def process_ai_challenger_images(label_file, one_hot=False, num_classes=79):
-    jsonData = load_ai_challenger_json()
-    image_dir = './ai_challenger_data/scene_train_images_brief'
+    image_width = 28
+    image_height = 28
+
+    image_json_data = load_ai_challenger_json()
+    image_tail = 'train'
+    if label_file == 'TEST':
+        image_tail = 'test'
+    image_dir = './ai_challenger_data/scene_train_images_' + image_tail
+
     label_list = []
     fp_list = []
-    for item in jsonData:
+    for item in image_json_data:
         fp = image_dir + '/' + item['image_id']
         if os.path.exists(fp):
             fp_list.append(fp)
             label_list.append(item["label_id"])
 
-    print("done: %d" % len(fp_list))
-    images = numpy.empty((len(fp_list), 28 * 28 * 3))
+    images = numpy.empty((len(fp_list), image_width * image_height * 3))
     labels = numpy.empty(len(label_list))
 
     for fp in fp_list:
         index = fp_list.index(fp)
         image = Image.open(fp)
-        resized_image = image.resize((28, 28), Image.ANTIALIAS)
+        resized_image = image.resize(
+            (image_width, image_height), Image.ANTIALIAS)
         img_ndarray = numpy.asarray(resized_image, dtype='float32')
         images[index] = numpy.ndarray.flatten(img_ndarray)
         labels[index] = numpy.int(label_list[index])
 
-    train_size = 10
-    if label_file == 'TRAIN':
-        images = images[:train_size]
-        labels = labels[:train_size]
-    else:
-        images = images[train_size:]
-        labels = labels[train_size:]
-
     num_images = len(images)
+    print(label_file)
     print("done: %d" % num_images)
-    rows = 28
-    cols = 28
+
+    rows = image_width
+    cols = image_height
     if one_hot:
-    # TODO: polen
         return images.reshape(num_images, rows, cols, 3), dense_to_one_hot(numpy.array(labels, dtype=numpy.uint8), num_classes)
     return images.reshape(num_images, rows, cols, 3), numpy.array(labels, dtype=numpy.uint8)
 
@@ -150,7 +118,7 @@ def read_data_sets(data_dir,
         'TEST', one_hot=one_hot)
 
     # polen
-    validation_size = 5
+    validation_size = int(len(train_images) * 0.2)
     # polen
     if not 0 <= validation_size <= len(train_images):
         raise ValueError(
@@ -207,6 +175,7 @@ class DataSet(object):
 
             # Convert shape from [num examples, rows, columns, depth]
             # to [num examples, rows*columns] (assuming depth == 1)
+
             if reshape:
                 assert images.shape[3] == 3
                 images = images.reshape(images.shape[0],
@@ -214,7 +183,7 @@ class DataSet(object):
             if dtype == dtypes.float32:
                 # Convert from [0, 255] -> [0.0, 1.0].
                 images = images.astype(numpy.float32)
-                images = numpy.multiply(images, 1.0 / 255.0)
+                images = numpy.multiply(images, 1.0 / 255)
         self._images = images
         self._labels = labels
         self._epochs_completed = 0
@@ -236,17 +205,8 @@ class DataSet(object):
     def epochs_completed(self):
         return self._epochs_completed
 
-    def next_batch(self, batch_size, fake_data=False, shuffle=True):
+    def next_batch(self, batch_size, shuffle=True):
         """Return the next `batch_size` examples from this data set."""
-        if fake_data:
-            fake_image = [1] * 784
-            if self.one_hot:
-                fake_label = [1] + [0] * 9
-            else:
-                fake_label = 0
-            return [fake_image for _ in xrange(batch_size)], [
-                fake_label for _ in xrange(batch_size)
-            ]
         start = self._index_in_epoch
         # Shuffle for the first epoch
         if self._epochs_completed == 0 and start == 0 and shuffle:

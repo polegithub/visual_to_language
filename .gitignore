@@ -5,9 +5,8 @@ ThirdLibarary/neuraltalk2/vis/imgs/
 ThirdLibarary/neuraltalk2/model/
 ImageProcessing/MNIST_data
 ImageProcessing/ai_challenger_data/scene_train_images_20170904/
-ImageProcessing/ai_challenger_data/scene_train_images_brief/
-
-
+ImageProcessing/ai_challenger_data/scene_train_images_test/
+ImageProcessing/ai_challenger_data/scene_train_images_train/
 
 .vscode/
 

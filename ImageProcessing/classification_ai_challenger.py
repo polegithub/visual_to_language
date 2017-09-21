@@ -1,5 +1,5 @@
 import tensorflow as tf
-from datasets import imnist
+from datasets import imnist_ai_challenger
 
 mnist = imnist_ai_challenger.read_data_sets('./MNIST_data/', one_hot=True)
 
@@ -14,6 +14,7 @@ def compute_accuracy(v_xs, v_ys):
 
 
 def weight_variable(shape):
+    print("weight_variable:shape:", shape)
     initial = tf.truncated_normal(shape, stddev=0.1)
     return tf.Variable(initial)
 
@@ -34,30 +35,34 @@ def max_pool_2x2(x):
     return tf.nn.max_pool(x, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding='SAME')
 
 
+image_length = 28
+
 # define placeholder for inputs to network
-xs = tf.placeholder(tf.float32, [None, 784, 3]) / 255.   # 28x28
+xs = tf.placeholder(
+    tf.float32, [None, image_length * image_length, 3]) / 255.   # 28x28
+print('xs:')
 print xs
 ys = tf.placeholder(tf.float32, [None, 79])
 print ys
 keep_prob = tf.placeholder(tf.float32)
-print keep_prob
-x_image = tf.reshape(xs, [-1, 28, 28, 3])
-print x_image
+# print keep_prob
+x_image = tf.reshape(xs, [-1, image_length, image_length, 3])
+# print x_image
 # print(x_image.shape)  # [n_samples, 28,28,1]
 
 ## conv1 layer ##
-W_conv1 = weight_variable([5, 5, 3, 32])  # patch 5x5, in size 1, out size 32
+W_conv1 = weight_variable([5, 5, 3, 32])  # patch 5x5, in size 3, out size 32
 b_conv1 = bias_variable([32])
-h_conv1 = tf.nn.relu(conv2d(x_image, W_conv1) +
-                     b_conv1)  # output size 28x28x32
+# output size 28x28x32
+h_conv1 = tf.nn.relu(conv2d(x_image, W_conv1) + b_conv1)
 # output size 14x14x32
 h_pool1 = max_pool_2x2(h_conv1)
 
 ## conv2 layer ##
 W_conv2 = weight_variable([5, 5, 32, 64])  # patch 5x5, in size 32, out size 64
 b_conv2 = bias_variable([64])
-h_conv2 = tf.nn.relu(conv2d(h_pool1, W_conv2) +
-                     b_conv2)  # output size 14x14x64
+# output size 14x14x64
+h_conv2 = tf.nn.relu(conv2d(h_pool1, W_conv2) + b_conv2)
 # output size 7x7x64
 h_pool2 = max_pool_2x2(h_conv2)
 
@@ -66,9 +71,7 @@ W_fc1 = weight_variable([7 * 7 * 64, 1024])
 b_fc1 = bias_variable([1024])
 # [n_samples, 7, 7, 64] ->> [n_samples, 7*7*64]
 h_pool2_flat = tf.reshape(h_pool2, [-1, 7 * 7 * 64])
-# print h_pool2_flat
-# print W_fc1
-# print b_fc1
+
 h_fc1 = tf.nn.relu(tf.matmul(h_pool2_flat, W_fc1) + b_fc1)
 h_fc1_drop = tf.nn.dropout(h_fc1, keep_prob)
 
@@ -88,13 +91,13 @@ sess = tf.Session()
 init = tf.global_variables_initializer()
 sess.run(init)
 
+
 for i in range(100):
     batch_xs, batch_ys = mnist.train.next_batch(10)
     # print batch_xs, batch_ys
     sess.run(train_step, feed_dict={
-             xs: batch_xs, ys: batch_ys, keep_prob: 0.5})
-    # print(batch_xs.shape, batch_ys.shape)
-    if i % 50 == 0:
+        xs: batch_xs, ys: batch_ys, keep_prob: 0.6})
+    if i % 10 == 0:
         print(mnist.test.images.shape, mnist.test.labels.shape)
         print(compute_accuracy(
             mnist.test.images, mnist.test.labels))
