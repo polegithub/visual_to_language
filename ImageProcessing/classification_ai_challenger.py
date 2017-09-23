@@ -1,3 +1,4 @@
+# coding=utf-8
 import tensorflow as tf
 from datasets import imnist_ai_challenger
 
@@ -67,10 +68,10 @@ h_conv2 = tf.nn.relu(conv2d(h_pool1, W_conv2) + b_conv2)
 h_pool2 = max_pool_2x2(h_conv2)
 
 ## fc1 layer ##
-W_fc1 = weight_variable([7 * 7 * 64, 1024])
+W_fc1 = weight_variable([image_length * image_length / 16 * 64, 1024])
 b_fc1 = bias_variable([1024])
 # [n_samples, 7, 7, 64] ->> [n_samples, 7*7*64]
-h_pool2_flat = tf.reshape(h_pool2, [-1, 7 * 7 * 64])
+h_pool2_flat = tf.reshape(h_pool2, [-1, image_length * image_length / 16 * 64])
 
 h_fc1 = tf.nn.relu(tf.matmul(h_pool2_flat, W_fc1) + b_fc1)
 h_fc1_drop = tf.nn.dropout(h_fc1, keep_prob)
@@ -90,7 +91,8 @@ sess = tf.Session()
 
 init = tf.global_variables_initializer()
 sess.run(init)
-
+# merged = tf.summary.merge_all()  # 将图形、训练过程等数据合并在一起
+# writer = tf.summary.FileWriter('logs', sess.graph)  # 将训练日志写入到logs文件夹下
 
 for i in range(100):
     batch_xs, batch_ys = mnist.train.next_batch(10)
@@ -101,3 +103,6 @@ for i in range(100):
         print(mnist.test.images.shape, mnist.test.labels.shape)
         print(compute_accuracy(
             mnist.test.images, mnist.test.labels))
+        # result = sess.run(merged, feed_dict={
+        #     xs: mnist.test.images, ys: mnist.test.labels})  # 计算需要写入的日志数据
+        # writer.add_summary(result, i)  # 将日志数据写入文件
