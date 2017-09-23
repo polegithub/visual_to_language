@@ -51,7 +51,7 @@ x_image = tf.reshape(xs, [-1, image_length, image_length, 3])
 # print(x_image.shape)  # [n_samples, 28,28,1]
 
 ## conv1 layer ##
-W_conv1 = weight_variable([5, 5, 3, 32])  # patch 5x5, in size 3, out size 32
+W_conv1 = weight_variable([5, 5, 3, 32])  # patch 5x5, in size 1, out size 32
 b_conv1 = bias_variable([32])
 # output size 28x28x32
 h_conv1 = tf.nn.relu(conv2d(x_image, W_conv1) + b_conv1)
