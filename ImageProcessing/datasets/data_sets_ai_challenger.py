@@ -35,7 +35,7 @@ def load_ai_challenger_json():
         return data
 
 
-def load_ai_scene_classes():
+def load_ai_scene_classes_csv():
     with open('./ai_challenger_data/scene_classes.csv', 'rb') as csvfile:
         reader = csv.reader(csvfile)
         scene_classes_map = {}
@@ -49,6 +49,8 @@ def load_ai_scene_classes():
 def process_ai_challenger_images(label_file, one_hot=False, num_classes=79):
     image_width = 28
     image_height = 28
+
+    scene_classes_csv = load_ai_scene_classes_csv()
 
     image_json_data = load_ai_challenger_json()
     image_tail = 'train'
@@ -77,7 +79,9 @@ def process_ai_challenger_images(label_file, one_hot=False, num_classes=79):
         labels[index] = numpy.int(label_list[index])
 
     num_images = len(images)
+    print('process_ai_challenger_images:')
     print(label_file)
+    print(labels)
     print("done: %d" % num_images)
 
     rows = image_width
@@ -185,6 +189,8 @@ class DataSet(object):
                 images = images.astype(numpy.float32)
                 images = numpy.multiply(images, 1.0 / 255)
         self._images = images
+        # print('DataSet.labels:')
+        # print(labels)
         self._labels = labels
         self._epochs_completed = 0
         self._index_in_epoch = 0
